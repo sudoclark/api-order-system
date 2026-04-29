@@ -10,12 +10,13 @@ class User(db.Model, UserMixin):
     role = db.Column(db.String(80), nullable=False, default="user")
 
     # Relacionamentos -- O usuário tem um pedido
-    orders = db.relationship("Order", backRef="user", lazy=True)
+    orders = db.relationship("Order", backref="user", lazy=True)
 
     def to_dict(self):
         return {
             "id": self.id,
             "username": self.username,
+            "role": self.role
         }
     
 
@@ -26,7 +27,7 @@ class Product(db.Model):
 
     # Relacionamento -- O produto vira um OrderItem quando adicionado a um Order. Imaginemos que um restaurante tem um cardápio -> esses são os produtos.
     # Dentro do cardápio o usuário escolhe um desses produtos para comprar e o adiciona na sacola -> vira um OrderItem.
-    order_items = db.relationship("OrderItem", backRef="product", lazy=True)
+    order_items = db.relationship("OrderItem", backref="product", lazy=True)
 
     def to_dict(self):
         return {
@@ -42,7 +43,7 @@ class OrderItem(db.Model):
 
     # Relacionamento -- Um OrderItem está relacionado a um Order -> um OrderItem faz parte de um pedido.
     # Carrega o product.id para sabermos a qual produto ele se refere.
-    order = db.Column(db.Integer, db.ForeignKey("order.id"), nullable=False)
+    order_id = db.Column(db.Integer, db.ForeignKey("order.id"), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
 
     # Com o valor e a quantidade, calculamos o toal DESSE PRODUTO no pedido
@@ -67,7 +68,7 @@ class Order(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False) # Relacionamento com a tabela User
 
     # Um pedido tem vários OrderItems
-    order_items = db.relationship("OrderItem", backRef="order", lazy=True)
+    order_items = db.relationship("OrderItem", backref="order", lazy=True)
     
 
     def to_dict(self):

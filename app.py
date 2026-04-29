@@ -132,6 +132,10 @@ def update_user(id):
         return jsonify(resp("OK", "Você não tem permissão para editar informações de outros usuários.")), 403
     
     response = request.json
+    password = response.get("password")
+
+    if password:
+        hashed = bcrypt.hashpw(str.encode(password), bcrypt.gensalt())
 
     if not response:
         return jsonify(resp("ERROR", "Dados inválidos.")), 400
@@ -151,7 +155,7 @@ def update_user(id):
             if current_user.role == "user" and field == "role":
                 return jsonify(resp("ERROR", "Você não tem permissão para alterar o seu cargo no sistema. Solicite a um admin.")), 403
         
-        setattr(user, field, response[field])
+            setattr(user, field, response[field] if field != "password" else hashed)
 
     db.session.commit()
 
@@ -173,3 +177,8 @@ def delete_user(id):
     db.session.commit()
 
     return jsonify(resp("OK", "Usuário deletado com sucesso."))
+
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
