@@ -68,7 +68,7 @@ class Order(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False) # Relacionamento com a tabela User
 
     # Um pedido tem vários OrderItems
-    order_items = db.relationship("OrderItem", backref="order", lazy=True)
+    order_items = db.relationship("OrderItem", backref="order", lazy=True, cascade="all, delete-orphan")
     
 
     def to_dict(self):
@@ -76,7 +76,7 @@ class Order(db.Model):
             "id": self.id,
             "status": self.status,
             "user_id": self.user_id,
-            "customer_name": self.user.name, # Esse user vem do relacionamento com a tabela User. Isso está definido lá na tabela User (parte lógica do relacionamento)
+            "customer_name": self.user.username, # Esse user vem do relacionamento com a tabela User. Isso está definido lá na tabela User (parte lógica do relacionamento)
             "items": [item.to_dict() for item in self.order_items],
             "total": sum(item.get_total() for item in self.order_items)
         }

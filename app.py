@@ -4,6 +4,7 @@ import bcrypt
 import pymysql
 
 from models.Tables import User, Product, OrderItem, Order
+from OrderStatus import OrderStatus
 from database import db
 from utils.ApiUtils import ApiUtils
 
@@ -285,6 +286,205 @@ def delete_product(id):
     db.session.commit()
 
     return jsonify(resp("OK", "Produto deletado com sucesso."))
+
+
+
+
+# ===========================================================
+# ORDER_ITEM - Rotas relacionadas aos produtos de um pedido
+# ===========================================================
+
+@app.route("/order-item", methods=["POST"])
+@login_required
+def add_item():
+    response = request.json
+
+    if not response:
+        return jsonify(resp("ERROR", "Dados inválidos. Verifique as informações enviadas!")), 400
+    
+    qtt = response.get("quantity")
+    product_name = response.get("product_name")
+
+    if not qtt or not product_name:
+        return jsonify(resp("ERROR", "Dados inválidos, a quantidade e o nome do produto são obrigatórios!")), 400
+    
+    if not isinstance(qtt, int):
+        return jsonify(resp("ERROR", "A quantidade precisa ser um número inteiro.")), 400
+    
+    order = Order.query.filter(Order.status=="PENDENTE", Order.user_id==current_user.id).first()
+
+    if not order:
+        return jsonify(resp("ERROR", "Pedido não encontrado. Certifique-se que esse usuário já possui um pedido em aberto no sistema")), 404
+
+    product = Product.query.filter_by(name=product_name).first()
+
+    if not product:
+        return jsonify(resp("ERROR", "Produto não encontrado, verifique as informações enviadas.")), 404
+    
+    order_item = OrderItem(quantity=qtt, order_id=order.id, product_id=product.id)
+
+    db.session.add(order_item)
+    db.session.commit()
+
+    return jsonify(resp("OK", "Produto adicionado ao pedido")), 201
+
+
+@app.route("/order-item/<int:id>", methods=["PATCH"])
+@login_required
+def update_order_item(id):
+    response = request.json
+
+    if not response:
+        return jsonify(resp("ERROR", "Dados inválidos. Verifique as informações enviadas!")), 400
+    
+    order_item = OrderItem.query.get(id)
+
+    if not order_item:
+        return jsonify(resp("ERROR", "Produto não encontrado.")), 404
+    
+    if order_item.order_id not in current_user.orders:
+        return jsonify(resp("ERROR", "Você não pode alterar o pedido de outra pessoa.")), 403
+    
+    if not isinstance(response["quantity"], int):
+        return jsonify(resp("ERROR", "A quantidade precisa ser um número inteiro.")), 400
+    
+    order_item.quantity = response["quantity"]
+
+    db.session.commit()
+
+    return jsonify(resp("OK", "Quantidade alterada com sucesso."))
+
+
+@app.route("/order-item/<int:id>", methods=["DELETE"])
+@login_required
+def delete_order_item(id):
+    order_item = OrderItem.query.get(id)
+
+    if not order_item:
+        return jsonify(resp("ERROR", "Produto não encontrado.")), 404
+    
+    if order_item.order_id not in current_user.orders:
+        return jsonify(resp("ERROR", "Você não pode deletar o pedido de outra pessoa.")), 403
+    
+    db.session.delete(order_item)
+    db.session.commit()
+
+    return jsonify(resp("OK", "Produto deletado com sucesso."))
+
+
+
+
+# ===========================================================
+# ORDER - Rotas relacionadas aos pedidos no sistema
+# ===========================================================
+
+@app.route("/order", methods=["POST"])
+@login_required
+def create_order():
+    order = Order(user_id=current_user.id)
+
+    db.session.add(order)
+    db.session.commit()
+
+    return jsonify(resp("OK", "Pedido criado com sucesso.")), 201
+
+
+@app.route("/order", methods=["GET"])
+@login_required
+def get_orders():
+    if current_user.role != "admin":
+        return jsonify(resp("ERROR", "Você não tem permissão para visualizar os pedidos. Verifique com um admin.")), 403
+    
+    orders = Order.query.all()
+
+    return jsonify(resp("OK", "Listagem obtida com sucesso.", orders=[order.to_dict() for order in orders]))
+
+
+@app.route("/order/<int:id>", methods=["GET"])
+@login_required
+def get_order_by_id(id):
+    order = Order.query.get(id)
+
+    if not order:
+        return jsonify(resp("ERROR", "Pedido não encontrado.")), 404
+
+    if current_user.role != "admin" and current_user.id != order.user_id:
+        return jsonify(resp("ERROR", "Você não tem permissão para visualizar um pedido de outro usuário. Verifique com um admin.")), 403
+    
+    return jsonify(resp("OK", "Pedido obtido com sucesso.", order=order.to_dict()))
+
+
+@app.route("/order/user", methods=["GET"])
+@login_required
+def get_orders_from_specific_user():
+    orders = current_user.orders
+
+    return jsonify(resp("OK", "Listagem obtida com sucesso.", orders=[ord.to_dict() for ord in orders]))
+
+
+@app.route("/order/<int:id>/order-items", methods=["GET"])
+@login_required
+def get_orderItems_from_specific_order(id):
+    order = Order.query.get(id)
+
+    if not order:
+        return jsonify(resp("ERROR", "Pedido não encontrado.")), 404
+    
+    order_items = order.order_items
+
+    return jsonify(resp("OK", "Listagem obtida com sucesso.", order_items=[oi.to_dict() for oi in order_items]))
+
+
+@app.route("/order/<action>/<int:id>", methods=["PATCH"])
+@login_required
+def update_order_status(action, id):
+    if current_user.role != "admin":
+        return jsonify(resp("ERROR", "Você não tem permissão para editar os pedidos. Verifique com um admin.")), 403
+    
+    order = Order.query.get(id)
+
+    if not order:
+        return jsonify(resp("ERROR", "Pedido não encontrado.")), 404
+    
+    if action == "cancel":
+        if order.status != "PENDENTE":
+            return jsonify(resp("ERROR", "Esse pedido não pode ser cancelado.", order_status=order.status)), 400
+        
+        order.status = OrderStatus.CANCELLED
+        db.session.commit()
+
+        return jsonify(resp("OK", "Pedido cancelado com sucesso."))
+    
+    elif action == "pay":
+        if order.status != "PENDENTE":
+            return jsonify(resp("ERROR", "Esse pedido não pode ser pago.", order_status=order.status)), 400
+        
+        order.status = OrderStatus.PAID
+        db.session.commit()
+
+        return jsonify(resp("OK", "Pedido pago com sucesso."))
+    
+    else:
+        return jsonify(resp("ERROR", "Opção inválida.")), 400
+    
+    
+
+@app.route("/order/<int:id>", methods=["DELETE"])
+@login_required
+def delete_order(id):
+    if current_user.role != "admin":
+        return jsonify(resp("ERROR", "Você não tem permissão para deletar os pedidos. Verifique com um admin.")), 403
+    
+    order = Order.query.get(id)
+
+    if not order:
+        return jsonify(resp("ERROR", "Pedido não encontrado.")), 404
+    
+    db.session.delete(order)
+    db.session.commit()
+
+    return jsonify(resp("OK", "Pedido deletado com sucesso."))
+
 
 
 
