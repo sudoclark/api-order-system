@@ -132,7 +132,7 @@ Existem dois cargos:
 | `user`  | Gerencia apenas seus próprios dados e pedidos |
 | `admin` | Acesso total ao sistema |
 
-> Para mudar a permissão de um usuário para `admin` é necessário acessar o banco diretamente, você não consegue fazer essa mudança via API.
+> Para criar o primeiro usuário com permissões de `admin`, é necessário acessar o banco de dados manualmente e alterar o campo de permissão desse usuário. Após existir um administrador no sistema, será possível gerenciar e modificar as permissões dos demais usuários diretamente pela API.
 
 ## Rotas
 
