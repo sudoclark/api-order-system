@@ -1,4 +1,5 @@
 from flask_login import UserMixin
+from sqlalchemy.orm import validates
 
 from database import db
 from OrderStatus import OrderStatus
@@ -28,6 +29,14 @@ class Product(db.Model):
     # Relacionamento -- O produto vira um OrderItem quando adicionado a um Order. Imaginemos que um restaurante tem um cardápio -> esses são os produtos.
     # Dentro do cardápio o usuário escolhe um desses produtos para comprar e o adiciona na sacola -> vira um OrderItem.
     order_items = db.relationship("OrderItem", backref="product", lazy=True)
+
+    @validates('price')
+    def validate_price(self, _key, value):
+        if not isinstance(value, (int, float)):
+            raise ValueError("O valor precisa ser um número!")
+        if value <= 0:
+            raise ValueError("O valor precisa ser um número positivo maior que zero!")
+        return value
 
     def to_dict(self):
         return {
