@@ -111,6 +111,7 @@ def login():
 
 
 @app.route("/logout", methods=["GET"])
+@login_required
 def logout():
     """
     Realiza o logout do usuário autenticado, encerrando sua sessão no sistema.

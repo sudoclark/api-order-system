@@ -11,6 +11,7 @@ API REST para gerenciamento de pedidos, produtos e usuários. O sistema simula o
 - **bcrypt 5.0** — criptografia de senhas
 - **MySQL** — banco de dados principal (via `pymysql`)
 - **Docker** — container do banco de dados MySQL
+- **Python-Dotenv 1.2.2** - Para recuperar as variáveis de ambiente
 
 ## Estrutura do projeto
 
@@ -131,6 +132,8 @@ Existem dois cargos:
 | `user`  | Gerencia apenas seus próprios dados e pedidos |
 | `admin` | Acesso total ao sistema |
 
+> Para mudar a permissão de um usuário para `admin` é necessário acessar o banco diretamente, você não consegue fazer essa mudança via API.
+
 ## Rotas
 
 Todas as respostas seguem o padrão:
@@ -144,7 +147,7 @@ Todas as respostas seguem o padrão:
 | Método | Rota      | Descrição                    | Auth |
 |--------|-----------|------------------------------|------|
 | POST   | /login    | Autentica o usuário          | Não  |
-| GET    | /logout   | Encerra a sessão do usuário  | Não  |
+| GET    | /logout   | Encerra a sessão do usuário  | Sim  |
 
 **Exemplo — login:**
 ```json
