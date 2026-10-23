@@ -26,12 +26,14 @@ class UserRepository():
             user = db.session.query(User).filter(User.id == id).first()
             return user
 
-    def update_user(self, id: int, field_to_modify: str, value: str) -> None:
+    def update_user(self, id: int, fields: dict) -> None:
         try:
             with self.__db_connection as db:
                 user = db.session.query(User).filter(User.id == id).first()
 
-                setattr(user, field_to_modify, value)
+                for field, value in fields.items():
+                    setattr(user, field, value)
+
                 db.session.commit()
         except Exception as ex:
             db.session.rollback()
