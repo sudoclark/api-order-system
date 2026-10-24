@@ -4,7 +4,6 @@ from sqlalchemy.orm import relationship
 from src.models.mysql.settings.base import Base
 
 class OrderItem(Base):
-
     __tablename__ = "order_item"
 
     id = Column(INTEGER, primary_key=True)

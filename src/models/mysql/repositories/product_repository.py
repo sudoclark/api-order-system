@@ -26,11 +26,18 @@ class ProductRepository:
             product = db.session.query(Product).filter(Product.id == id).first()
             return product
 
-    def update_product(self, id: int, field_to_modify: str, value: str | float) -> None:
+    def get_product_by_name(self, name: str):
+        with self.__db_connection as db:
+            product = db.session.query(Product).filter(Product.name == name).first()
+            return product
+
+    def update_product(self, id: int, fields: dict) -> None:
         try:
             with self.__db_connection as db:
                 product = db.session.query(Product).filter(Product.id == id).first()
-                setattr(product, field_to_modify, value)
+                
+                for field, value in fields.items():
+                    setattr(product, field, value)
 
                 db.session.commit()
         except Exception as ex:
@@ -41,6 +48,8 @@ class ProductRepository:
         try:
             with self.__db_connection as db:
                 db.session.query(Product).filter(Product.id == id).delete()
+
+                db.session.commit()
         except Exception as ex:
             db.session.rollback()
             raise ex

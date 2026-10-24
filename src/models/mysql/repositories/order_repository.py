@@ -1,6 +1,5 @@
 from src.models.mysql.settings.connect import DbManager
 from src.models.mysql.entities.order import OrderItem, Order
-from OrderStatus import OrderStatus
 
 class OrderRepository:
     def __init__(self, db_connection: DbManager):
@@ -31,6 +30,11 @@ class OrderRepository:
         except Exception as ex:
             db.session.rollback()
             raise ex
+
+    def get_order_iten_by_id(self, order_item_id: int):
+        with self.__db_connection as db:
+            order_item = db.session.query(OrderItem).filter(OrderItem.id == order_item_id).first()
+            return order_item
 
     def delete_order_item(self, order_item_id: int):
         try:
@@ -78,6 +82,11 @@ class OrderRepository:
             order_itens = order.order_items
 
             return order_itens
+
+    def get_order_by_status_and_user_id(self, status: str, user_id: int):
+        with self.__db_connection as db:
+            order = db.session.query(Order).filter(Order.status == status, Order.user_id == user_id).first()
+            return order
 
     def update_order_status(self, order_id: int, new_status: str):
         try:
