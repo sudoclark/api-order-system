@@ -1,8 +1,11 @@
-from flask import request
 from flask_login import current_user
 
 from OrderStatus import OrderStatus
+from src.errors.http_errors.not_found_error import NotFoundError
+from src.errors.http_errors.forbidden_error import ForbiddenError
+from src.errors.http_errors.bad_request_error import BadRequestError
 from src.models.interfaces.order_repository_interface import OrderRepositoryInterface
+from src.errors.http_errors.unprocessable_entity_error import UnprocessableEntityError
 from src.models.interfaces.product_repository_interface import ProductRepositoryInterface
 
 class OrderController:
@@ -19,26 +22,26 @@ class OrderController:
         response = request.json
 
         if not response:
-            raise Exception("Dados inválidos. Verifique as informações enviadas!")
+            raise BadRequestError("Dados inválidos. Verifique as informações enviadas!")
 
         quantity = response.get("quantity")
         product_name = response.get("product_name")
 
         if not quantity or not product_name:
-            raise Exception("Dados inválidos, a quantidade e o nome do produto são obrigatórios!")
+            raise BadRequestError("Dados inválidos, a quantidade e o nome do produto são obrigatórios!")
 
         if not isinstance(quantity, int):
-            raise Exception("A quantidade precisa ser um número inteiro")
+            raise UnprocessableEntityError("A quantidade precisa ser um número inteiro")
 
         order = self.__order_repository.get_order_by_status_and_user_id("PENDENTE", current_user.id)
 
         if not order:
-            raise Exception("Pedido não encontrado. Certifique-se que esse usuário já possui um pedido em aberto no sistema")
+            raise NotFoundError("Pedido não encontrado. Certifique-se que esse usuário já possui um pedido em aberto no sistema")
 
         product = self.__product_repository.get_product_by_name(product_name)
 
         if not product:
-            raise Exception("Produto não encontrado, verifique as informações enviadas")
+            raise NotFoundError("Produto não encontrado, verifique as informações enviadas")
 
         self.__order_repository.add_item(quantity=quantity, order_id=order.id, product_id=product.id)
 
@@ -46,23 +49,23 @@ class OrderController:
         response = request.json
 
         if not response:
-            raise Exception("Dados inválidos. Verifique as informações enviadas")
+            raise BadRequestError("Dados inválidos. Verifique as informações enviadas")
 
         quantity = response.get("quantity")
 
         if not quantity:
-            raise Exception("A quantidade é obrigatória")
+            raise BadRequestError("A quantidade é obrigatória")
 
         order_item = self.__order_repository.get_order_iten_by_id(order_iten_id)
 
         if not order_item:
-            raise Exception("Produto não encontrado")
+            raise NotFoundError("Produto não encontrado")
 
         if order_item.order.user_id != current_user.id:
-            raise Exception("Você não pode alterar o pedido de outra pessoa")
+            raise ForbiddenError("Você não pode alterar o pedido de outra pessoa")
 
         if not isinstance(quantity, int):
-            raise Exception("A quantidade precisa ser um número inteiro")
+            raise UnprocessableEntityError("A quantidade precisa ser um número inteiro")
 
         self.__order_repository.update_order_item(order_item_id=order_iten_id, quantity=response["quantity"])
 
@@ -70,10 +73,10 @@ class OrderController:
         order_item = self.__order_repository.get_order_iten_by_id(order_item_id)
 
         if not order_item:
-            raise Exception("Produto não encontrado")
+            raise NotFoundError("Produto não encontrado")
 
         if order_item.order.user_id != current_user.id:
-            raise Exception("Você não tem permissão para deletar o pedido de outra pessoa")
+            raise ForbiddenError("Você não tem permissão para deletar o pedido de outra pessoa")
 
         self.__order_repository.delete_order_item(order_item_id)
 
@@ -94,10 +97,10 @@ class OrderController:
         order = self.__order_repository.get_order_by_id(order_id=order_id)
 
         if not order:
-            raise Exception("Pedido não encontrado")
+            raise NotFoundError("Pedido não encontrado")
 
         if current_user.role != "admin" and current_user.id != order.user_id:
-            raise Exception("Você não tem permissão para visualizar um pedido de outro usuário. Verifique com um admin")
+            raise ForbiddenError("Você não tem permissão para visualizar um pedido de outro usuário. Verifique com um admin")
 
         return order.to_dict()
 
@@ -110,10 +113,10 @@ class OrderController:
         order = self.__order_repository.get_order_by_id(order_id=order_id)
 
         if not order:
-            raise Exception("Pedido não encontrado")
+            raise NotFoundError("Pedido não encontrado")
 
         if current_user.id != order.user_id:
-            raise Exception("Você não pode visualizar itens dos pedidos de outros usuários")
+            raise ForbiddenError("Você não pode visualizar itens dos pedidos de outros usuários")
 
         order_items = order.order_items
 
@@ -123,28 +126,28 @@ class OrderController:
         order = self.__order_repository.get_order_by_id(order_id=order_id)
 
         if not order:
-            raise Exception("Pedido não encontrado")
+            raise NotFoundError("Pedido não encontrado")
 
         if action == "cancel":
             if order.status != "PENDENTE":
-                raise Exception("Esse pedido não pode ser cancelado")
+                raise UnprocessableEntityError("Esse pedido não pode ser cancelado")
 
             self.__order_repository.update_order_status(order_id=order_id, new_status=OrderStatus.CANCELLED)
 
         elif action == "pay":
             if order.status != "PENDENTE":
-                raise Exception("Esse pedido não pode ser pago")
+                raise UnprocessableEntityError("Esse pedido não pode ser pago")
 
             self.__order_repository.update_order_status(order_id=order_id, new_status=OrderStatus.PAID)
 
         else:
-            raise Exception("Opção inválida")
+            raise BadRequestError("Opção inválida")
 
 
     def delete_order(self, order_id: int):
         order = self.__order_repository.get_order_by_id(order_id=order_id)
 
         if not order:
-            raise Exception("Pedido não encontrado")
+            raise NotFoundError("Pedido não encontrado")
 
         self.__order_repository.delete_order(order_id=order_id)

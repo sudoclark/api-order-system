@@ -1,5 +1,8 @@
 from flask import request
 
+from src.errors.http_errors.not_found_error import NotFoundError
+from src.errors.http_errors.bad_request_error import BadRequestError
+from src.errors.http_errors.unprocessable_entity_error import UnprocessableEntityError
 from src.models.interfaces.product_repository_interface import ProductRepositoryInterface
 
 class ProductController:
@@ -10,18 +13,18 @@ class ProductController:
         response = request.json
 
         if not response or "name" not in response or "price" not in response:
-            raise Exception("Dados inválidos. Verifique as informações enviadas")
+            raise BadRequestError("Dados inválidos. Verifique as informações enviadas")
 
         name = response.get("name")
         price = response.get("price")
 
         if not name or not price:
-            raise Exception("Dados inválidos, o nome e o valor do produto são obrigatórios")
+            raise BadRequestError("Dados inválidos, o nome e o valor do produto são obrigatórios")
 
         exists = self.__product_repository.get_product_by_name(name)
 
         if exists:
-            raise Exception("Produto já existe")
+            raise UnprocessableEntityError("Produto já existe")
 
         self.__product_repository.create_product(name=name, price=price)
 
@@ -34,7 +37,7 @@ class ProductController:
         product = self.__product_repository.get_product_by_id(product_id)
 
         if not product:
-            raise Exception("Produto não encontrado")
+            raise NotFoundError("Produto não encontrado")
 
         return product.to_dict()
 
@@ -42,12 +45,12 @@ class ProductController:
         response = request.json
 
         if not response:
-            raise Exception("Dados inválidos, verifique as informações enviadas")
+            raise BadRequestError("Dados inválidos, verifique as informações enviadas")
 
         product = self.__product_repository.get_product_by_id(product_id)
 
         if not product:
-            raise Exception("Produto não encontrado")
+            raise NotFoundError("Produto não encontrado")
 
         fields = ["name", "price"]
 
@@ -55,12 +58,12 @@ class ProductController:
         for field in fields:
             if field in response:
                 if not response[field]:
-                    raise Exception("Dados inválidos. Tem certeza que enviou nome ou preço do produto?")
+                    raise BadRequestError("Dados inválidos. Tem certeza que enviou nome ou preço do produto?")
 
                 values_to_apply[field] = response[field]
 
         if not values_to_apply:
-            raise Exception("Nenhum campo válido enviado")
+            raise UnprocessableEntityError("Nenhum campo válido enviado")
 
         self.__product_repository.update_product(product_id, values_to_apply)
 
@@ -68,6 +71,6 @@ class ProductController:
         product = self.__product_repository.get_product_by_id(product_id)
 
         if not product:
-            raise Exception("Produto não encontrado")
+            raise NotFoundError("Produto não encontrado")
 
         self.__product_repository.delete_product(product_id)

@@ -2,6 +2,9 @@ from flask import request
 from flask_login import current_user
 import bcrypt
 
+from src.errors.http_errors.not_found_error import NotFoundError
+from src.errors.http_errors.forbidden_error import ForbiddenError
+from src.errors.http_errors.bad_request_error import BadRequestError
 from src.models.interfaces.user_repository_interface import UserRepositoryInterface
 
 class UserController:
@@ -12,13 +15,13 @@ class UserController:
         response = request.json
 
         if not response or "username" not in response or "password" not in response:
-            raise Exception("ERROR: Dados inválidos. Verifique as informações enviadas")
+            raise BadRequestError("Dados inválidos. Verifique as informações enviadas")
 
         username = response.get("username")
         password = response.get("password")
 
         if not username or not password:
-            raise Exception("ERROR: Credenciais inválidas")
+            raise BadRequestError("Credenciais inválidas. Verifique as informações enviadas")
 
         hashed = bcrypt.hashpw(str.encode(password), bcrypt.gensalt())
 
@@ -27,7 +30,7 @@ class UserController:
     def get_users(self):
         if current_user.role == "user":
             user = self.__user_repository.get_user_by_id(current_user.id)
-            return user.to_dict()
+            return [user.to_dict()]
 
         users = self.__user_repository.get_users()
 
@@ -35,25 +38,25 @@ class UserController:
 
     def get_user_by_id(self, user_id: int):
         if current_user.role == "user" and current_user.id != user_id:
-            raise Exception("Você não tem permissão para ver informações de outros usuários") 
+            raise ForbiddenError("Você não tem permissão para ver informações de outros usuários") 
 
         user = self.__user_repository.get_user_by_id(user_id)
 
         if not user:
-            raise Exception("Usuário não encontrado")
+            raise NotFoundError("Usuário não encontrado")
 
         return user.to_dict()
 
     def update_user(self, user_id: int, request: dict):
         if current_user.role == "user" and current_user.id != user_id:
-            raise Exception("Você não tem permissão para editar informações de outros usuários")
+            raise ForbiddenError("Você não tem permissão para editar informações de outros usuários")
 
         response = request.json
 
         if not response:
-            raise Exception("Dados inválidos")
-        password = response.get("password")
+            raise BadRequestError("Dados inválidos. Verifique as informações enviadas")
 
+        password = response.get("password")
 
         if password:
             hashed = bcrypt.hashpw(str.encode(password), bcrypt.gensalt())
@@ -61,7 +64,7 @@ class UserController:
         user = self.__user_repository.get_user_by_id(user_id)
 
         if not user:
-            raise Exception("Usuário não encontrado")
+            raise NotFoundError("Usuário não encontrado")
 
         fields = ["username", "password", "role"]
         updates = {}
@@ -69,10 +72,10 @@ class UserController:
         for field in fields:
             if field in response:
                 if not response[field]:
-                    raise Exception("Dados inválidos. Verifique as informações enviadas")
+                    raise BadRequestError("Dados inválidos. Verifique as informações enviadas")
 
                 if current_user.role == "user" and field == "role":
-                    raise Exception("Você não tem permissão para alterar o seu cargo no sistema. Solicite a um admin")
+                    raise ForbiddenError("Você não tem permissão para alterar o seu cargo no sistema. Solicite a um admin")
 
                 updates[field] = response[field] if field != "password" else hashed
 
@@ -80,6 +83,6 @@ class UserController:
 
     def delete_user(self, user_id: int):
         if current_user.role == "user" and current_user.id != user_id:
-            raise Exception("Você não tem permissão para deletar outros usuários do sistema")
+            raise ForbiddenError("Você não tem permissão para deletar outros usuários do sistema")
 
         self.__user_repository.delete_user(user_id)
