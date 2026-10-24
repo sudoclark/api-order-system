@@ -3,9 +3,6 @@ from flask_login import current_user
 import bcrypt
 
 from src.models.mysql.repositories.user_repository import UserRepository
-from utils.ApiUtils import ApiUtils
-
-resp = ApiUtils.response
 
 class UserController:
     def __init__(self, user_repository: UserRepository):
