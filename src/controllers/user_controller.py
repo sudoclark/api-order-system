@@ -2,10 +2,10 @@ from flask import request
 from flask_login import current_user
 import bcrypt
 
-from src.models.mysql.repositories.user_repository import UserRepository
+from src.models.interfaces.user_repository_interface import UserRepositoryInterface
 
 class UserController:
-    def __init__(self, user_repository: UserRepository):
+    def __init__(self, user_repository: UserRepositoryInterface):
         self.__user_repository = user_repository
 
     def create_user(self, request):

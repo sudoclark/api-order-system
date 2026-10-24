@@ -1,7 +1,8 @@
 from src.models.mysql.settings.connect import DbManager
 from src.models.mysql.entities.order import OrderItem, Order
+from src.models.interfaces.order_repository_interface import OrderRepositoryInterface
 
-class OrderRepository:
+class OrderRepository(OrderRepositoryInterface):
     def __init__(self, db_connection: DbManager):
         self.__db_connection = db_connection
 

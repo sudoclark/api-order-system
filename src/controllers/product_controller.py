@@ -1,9 +1,9 @@
 from flask import request
 
-from src.models.mysql.repositories.product_repository import ProductRepository
+from src.models.interfaces.product_repository_interface import ProductRepositoryInterface
 
 class ProductController:
-    def __init__(self, product_repository: ProductRepository):
+    def __init__(self, product_repository: ProductRepositoryInterface):
         self.__product_repository = product_repository
 
     def create_product(self, request):

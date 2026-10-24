@@ -2,11 +2,11 @@ from flask import request
 from flask_login import current_user
 
 from OrderStatus import OrderStatus
-from src.models.mysql.repositories.order_repository import OrderRepository
-from src.models.mysql.repositories.product_repository import ProductRepository
+from src.models.interfaces.order_repository_interface import OrderRepositoryInterface
+from src.models.interfaces.product_repository_interface import ProductRepositoryInterface
 
 class OrderController:
-    def __init__(self, order_repository: OrderRepository, product_repository: ProductRepository):
+    def __init__(self, order_repository: OrderRepositoryInterface, product_repository: ProductRepositoryInterface):
         self.__order_repository = order_repository
         self.__product_repository = product_repository
         
