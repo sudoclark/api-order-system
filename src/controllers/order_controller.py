@@ -1,10 +1,9 @@
-from flask_login import current_user, login_required
+from flask_login import current_user
 
-from OrderStatus import OrderStatus
+from src.schemas.order_status import OrderStatus
 from src.errors.http_errors.not_found_error import NotFoundError
 from src.errors.http_errors.forbidden_error import ForbiddenError
 from src.errors.http_errors.bad_request_error import BadRequestError
-from src.utils.decorators.admin_required_decorator import admin_required
 from src.models.interfaces.order_repository_interface import OrderRepositoryInterface
 from src.errors.http_errors.unprocessable_entity_error import UnprocessableEntityError
 from src.models.interfaces.product_repository_interface import ProductRepositoryInterface
@@ -19,7 +18,6 @@ class OrderController:
     # ORDER_ITEM CONTROLLER
     # ===============================
 
-    @login_required
     def add_item(self, request):
         """
         Adiciona um produto a um pedido em aberto (status 'PENDENTE') do usuário autenticado.
@@ -59,7 +57,6 @@ class OrderController:
 
         self.__order_repository.add_item(quantity=quantity, order_id=order.id, product_id=product.id)
 
-    @login_required
     def update_order_item(self, request, order_iten_id: int):
         """
         Atualiza a quantidade de um item em um pedido pelo ID do item.
@@ -99,7 +96,6 @@ class OrderController:
 
         self.__order_repository.update_order_item(order_item_id=order_iten_id, quantity=response["quantity"])
 
-    @login_required
     def delete_order_item(self, order_item_id: int):
         """
         Remove um item de um pedido pelo seu ID.
@@ -130,7 +126,6 @@ class OrderController:
     # ORDER CONTROLLER
     # ===============================
 
-    @login_required
     def create_order(self):
         """
         Cria um novo pedido para o usuário autenticado com status inicial 'PENDENTE'.
@@ -143,8 +138,6 @@ class OrderController:
         """
         self.__order_repository.create_order(current_user.id)
 
-    @login_required
-    @admin_required
     def get_orders(self):
         """
         Retorna a listagem de todos os pedidos cadastrados no sistema.
@@ -160,7 +153,6 @@ class OrderController:
 
         return [order.to_dict() for order in orders]
 
-    @login_required
     def get_order_by_id(self, order_id: int):
         """
         Retorna as informações de um pedido específico pelo seu ID.
@@ -187,7 +179,6 @@ class OrderController:
 
         return order.to_dict()
 
-    @login_required
     def get_orders_from_specif_user(self):
         """
         Retorna a listagem de todos os pedidos do usuário autenticado.
@@ -202,7 +193,6 @@ class OrderController:
 
         return [order.to_dict() for order in orders]
 
-    @login_required
     def get_orderItems_from_specific_order(self, order_id: int):
         """
         Retorna a listagem de todos os itens de um pedido específico pelo ID do pedido.
@@ -231,8 +221,6 @@ class OrderController:
 
         return [oi.to_dict() for oi in order_items]
 
-    @login_required
-    @admin_required
     def update_order_status(self, action, order_id: int):
         """
         Atualiza o status de um pedido pelo seu ID com base na ação informada.
@@ -273,8 +261,6 @@ class OrderController:
         else:
             raise BadRequestError("Opção inválida")
 
-    @login_required
-    @admin_required
     def delete_order(self, order_id: int):
         """
         Remove um pedido do sistema pelo seu ID.

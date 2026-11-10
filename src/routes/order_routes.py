@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify
+from flask_login import login_required
 
-from utils.ApiUtils import ApiUtils
+from src.utils.ApiUtils import ApiUtils
 from src.errors.handle_error import handle_error
 from src.controllers.order_controller import OrderController
-from src.controllers.product_controller import ProductController
 from src.models.mysql.settings.connect import db_manager_connection
+from src.utils.decorators.admin_required_decorator import admin_required
 from src.models.mysql.repositories.order_repository import OrderRepository
 from src.models.mysql.repositories.product_repository import ProductRepository
 
@@ -21,6 +22,7 @@ orders_bp = Blueprint("orders_routes_bp", __name__)
 # ===========================================================
 
 @orders_bp.route("/order-item", methods=["POST"])
+@login_required
 def add_item():
     try:
         order_controller.add_item(request)
@@ -31,6 +33,7 @@ def add_item():
         return jsonify(error["data"]), error["status_code"]
 
 @orders_bp.route("/order-item/<int:order_item_id>", methods=["PATCH"])
+@login_required
 def update_order_item(order_item_id):
     try:
         order_controller.update_order_item(request, order_item_id)
@@ -41,6 +44,7 @@ def update_order_item(order_item_id):
         return jsonify(error["data"]), error["status_code"]
 
 @orders_bp.route("/order-item/<int:order_item_id>", methods=["DELETE"])
+@login_required
 def delete_order_item(order_item_id):
     try:
         order_controller.delete_order_item(order_item_id)
@@ -57,6 +61,7 @@ def delete_order_item(order_item_id):
 # ===========================================================
 
 @orders_bp.route("/order", methods=["POST"])
+@login_required
 def create_order():
     try:
         order_controller.create_order()
@@ -67,6 +72,8 @@ def create_order():
         return jsonify(error["data"]), error["status_code"]
 
 @orders_bp.route("/order", methods=["GET"])
+@login_required
+@admin_required
 def get_orders():
     try:
         orders = order_controller.get_orders()
@@ -77,6 +84,7 @@ def get_orders():
         return jsonify(error["data"]), error["status_code"]
 
 @orders_bp.route("/order/<int:order_id>", methods=["GET"])
+@login_required
 def get_order_by_id(order_id):
     try:
         order = order_controller.get_order_by_id(order_id)
@@ -87,6 +95,7 @@ def get_order_by_id(order_id):
         return jsonify(error["data"]), error["status_code"]
 
 @orders_bp.route("/order/user", methods=["GET"])
+@login_required
 def get_orders_from_specific_user():
     try:
         orders = order_controller.get_orders_from_specif_user()
@@ -97,6 +106,7 @@ def get_orders_from_specific_user():
         return jsonify(error["data"]), error["status_code"]
 
 @orders_bp.route("/order/<int:order_id>/order-items", methods=["GET"])
+@login_required
 def get_orderItems_from_specific_order(order_id):
     try:
         order_itens = order_controller.get_orderItems_from_specific_order(order_id)
@@ -107,6 +117,8 @@ def get_orderItems_from_specific_order(order_id):
         return jsonify(error["data"]), error["status_code"]
 
 @orders_bp.route("/order/<action>/<int:order_id>", methods=["PATCH"])
+@login_required
+@admin_required
 def update_order_status(action, order_id):
     try:
         order_controller.update_order_status(action, order_id)
@@ -117,6 +129,8 @@ def update_order_status(action, order_id):
         return jsonify(error["data"]), error["status_code"]
 
 @orders_bp.route("/order/<int:order_id>", methods=["DELETE"])
+@login_required
+@admin_required
 def delete_order(order_id):
     try:
         order_controller.delete_order(order_id)

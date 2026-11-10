@@ -37,7 +37,6 @@ class UserController:
 
         self.__user_repository.create_user(username=username, password=hashed)
 
-    @login_required
     def get_users(self):
         """
         Retorna a listagem de usuários do sistema.
@@ -59,7 +58,6 @@ class UserController:
 
         return [user.to_dict() for user in users]
 
-    @login_required
     def get_user_by_id(self, user_id: int):
         """
         Retorna as informações de um usuário específico pelo seu ID.
@@ -86,7 +84,6 @@ class UserController:
 
         return user.to_dict()
 
-    @login_required
     def update_user(self, user_id: int, request: dict):
         """
         Atualiza os dados de um usuário específico pelo seu ID.
@@ -137,7 +134,6 @@ class UserController:
 
         self.__user_repository.update_user(user_id, updates)
 
-    @login_required
     def delete_user(self, user_id: int):
         """
         Remove um usuário do sistema pelo seu ID.

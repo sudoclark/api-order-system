@@ -1,6 +1,7 @@
+from flask_login import login_required
 from flask import Blueprint, request, jsonify
 
-from utils.ApiUtils import ApiUtils
+from src.utils.ApiUtils import ApiUtils
 from src.errors.handle_error import handle_error
 from src.controllers.user_controller import UserController
 from src.models.mysql.settings.connect import db_manager_connection
@@ -24,6 +25,7 @@ def create_user():
         return jsonify(error["data"]), error["status_code"]
 
 @user_bp.route("/users", methods=["GET"])
+@login_required
 def get_users():
     try:
         users = user_controller.get_users()
@@ -34,6 +36,7 @@ def get_users():
         return jsonify(error["data"]), error["status_code"]
 
 @user_bp.route("/users/<int:user_id>", methods=["GET"])
+@login_required
 def get_user_by_id(user_id):
     try:
         user = user_controller.get_user_by_id(user_id)
@@ -44,6 +47,7 @@ def get_user_by_id(user_id):
         return jsonify(error["data"]), error["status_code"]
 
 @user_bp.route("/users/<int:user_id>", methods=["PATCH"])
+@login_required
 def update_user(user_id):
     try:
         user_controller.update_user(user_id, request)
@@ -54,6 +58,7 @@ def update_user(user_id):
         return jsonify(error["data"]), error["status_code"]
 
 @user_bp.route("/users/<int:user_id>", methods=["DELETE"])
+@login_required
 def delete_user(user_id):
     try:
         user_controller.delete_user(user_id)

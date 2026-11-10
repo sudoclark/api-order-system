@@ -30,7 +30,7 @@ class Order(Base):
     __tablename__ = "order"
 
     id = Column(INTEGER, primary_key=True)
-    status = Column(String, nullable=False, default="pending")
+    status = Column(String(100), nullable=False, default="pending")
     user_id = Column(INTEGER, ForeignKey("user.id"), nullable=False)
 
     order_items = relationship("OrderItem", backref="order", lazy=True, cascade="all, delete-orphan")

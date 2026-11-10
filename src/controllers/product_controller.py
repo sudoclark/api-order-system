@@ -1,8 +1,5 @@
-from flask_login import login_required
-
 from src.errors.http_errors.not_found_error import NotFoundError
 from src.errors.http_errors.bad_request_error import BadRequestError
-from src.utils.decorators.admin_required_decorator import admin_required
 from src.errors.http_errors.unprocessable_entity_error import UnprocessableEntityError
 from src.models.interfaces.product_repository_interface import ProductRepositoryInterface
 
@@ -10,7 +7,6 @@ class ProductController:
     def __init__(self, product_repository: ProductRepositoryInterface):
         self.__product_repository = product_repository
 
-    @login_required
     def create_product(self, request):
         """
         Cria um novo produto no sistema.
@@ -42,7 +38,6 @@ class ProductController:
 
         self.__product_repository.create_product(name=name, price=price)
 
-    @login_required
     def get_products(self):
         """
         Retorna a listagem de todos os produtos cadastrados no sistema.
@@ -57,7 +52,6 @@ class ProductController:
 
         return [p.to_dict() for p in products]
 
-    @login_required
     def get_product_by_id(self, product_id: int):
         """
         Retorna as informações de um produto específico pelo seu ID.
@@ -79,8 +73,6 @@ class ProductController:
 
         return product.to_dict()
 
-    @login_required
-    @admin_required
     def update_product(self, request, product_id: int):
         """
         Atualiza os dados de um produto específico pelo seu ID.
@@ -122,8 +114,6 @@ class ProductController:
 
         self.__product_repository.update_product(product_id, values_to_apply)
 
-    @login_required
-    @admin_required
     def delete_product(self, product_id: int):
         """
         Remove um produto do sistema pelo seu ID.
