@@ -1,0 +1,6 @@
+O que falta para a refatoração?
+
+4. Estruturar as pastas de acordo com a nova arquitetura.
+
+5. Validar o banco de dados. Apagar os dados antigos e verificar
+comunicação com o código (não sei se vai ser necessário refazer o banco)
