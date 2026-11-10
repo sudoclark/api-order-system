@@ -1,5 +1,5 @@
 from sqlalchemy import Column, INTEGER, String, REAL
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy.orm import relationship, backref, validates
 
 from src.models.mysql.settings.base import Base
 
@@ -10,7 +10,7 @@ class Product(Base):
     name = Column(String(200), nullable=False, unique=True)
     price = Column(REAL, nullable=False)
 
-    order_items = relationship("OrderItem", backref="product", lazy=True)
+    order_items = relationship("OrderItem", backref=backref("product", lazy="joined"), lazy="joined")
 
     @validates('price')
     def validate_price(self, _key, value):

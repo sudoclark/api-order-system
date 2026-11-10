@@ -2,6 +2,7 @@ from sqlalchemy import Column, INTEGER, String, ForeignKey
 from sqlalchemy.orm import relationship
 
 from src.models.mysql.settings.base import Base
+from src.schemas.order_status import OrderStatus
 
 class OrderItem(Base):
     __tablename__ = "order_item"
@@ -30,10 +31,10 @@ class Order(Base):
     __tablename__ = "order"
 
     id = Column(INTEGER, primary_key=True)
-    status = Column(String(100), nullable=False, default="pending")
+    status = Column(String(100), nullable=False, default=OrderStatus.PENDING)
     user_id = Column(INTEGER, ForeignKey("user.id"), nullable=False)
 
-    order_items = relationship("OrderItem", backref="order", lazy=True, cascade="all, delete-orphan")
+    order_items = relationship("OrderItem", backref="order", lazy="joined", cascade="all, delete-orphan")
 
     def to_dict(self):
         return {

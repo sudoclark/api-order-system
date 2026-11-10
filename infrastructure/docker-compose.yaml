@@ -3,7 +3,7 @@ services:
     image: mysql:latest
     restart: always
     env_file:
-      - .env.dev
+      - .env
     environment:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
